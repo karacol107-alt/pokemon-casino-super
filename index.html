@@ -183,7 +183,7 @@ function dPage(){
       ${field('主催者のユーザー名（自分の名前）',`<input id="auc-host-name" placeholder="例：やますず" value="${esc(onlineRoom.playerName||'主催者')}">`)}
       ${field('事前登録する参加者（任意・1行に1人）',`<textarea style="min-height:56px" id="auc-extra-players" placeholder="招待URLから参加してもらう場合は空欄のままでOKです"></textarea>`)}
       <div class="row">
-        ${field('初期予算（オルカ / 0無制限）',`<input id="auc-budget" type="number" min="0" step="10000" value="${auc?.budgetStart??1000000}">`)}
+        ${field('初期予算（オルカ / 0無制限）',`<input id="auc-budget" type="number" min="0" step="10000" value="${auc?.budgetStart??300000}">`)}
         ${field('最大獲得枠（0無制限）',`<input id="auc-max-picks" type="number" min="0" max="20" value="${auc?.maxPicks??6}">`)}
         ${field('出品ポケモン上限（0無制限）',`<input id="auc-max-lots" type="number" min="0" max="200" value="${auc?.maxLots??0}">`)}
       </div>
@@ -303,7 +303,7 @@ function auctionBoard(auc){
     <div class="row">
       <div><b>主催者コントロール（出品上限・売却フェーズ・福袋管理）</b><small class="muted">出品：${offeredCount}${maxLots?'/'+maxLots:''}体 ／ 終了：${completedCount}回 ／ 売却間隔：${sellInterval?sellInterval+'回ごと（'+auc.sellDuration+'秒）':'手動のみ'}</small></div>
       <div class="row-actions">
-        ${!sellActive?btn(`💸 売却フェーズへ切替（${auc.sellDuration||120}秒）`,'auc-start-selltime','purple'):btn('⚔ 売却フェーズを終了して入札へ戻る','auc-end-selltime','orange')}
+        ${!sellActive?btn(`💸 売却フェーズへ切替（${auc.sellDuration||30}秒）`,'auc-start-selltime','purple'):btn('⚔ 売却フェーズを終了して入札へ戻る','auc-end-selltime','orange')}
         ${bagItems.length?btn(`🎁 今すぐ福袋（${bagItems.length}体）を出品`,'auc-force-bag','secondary'):''}
         ${bagItems.length?btn('🗑 福袋中身をリセット','auc-reset-bag','secondary'):''}
         ${btn('結果をチーム保存（Bへ）','auc-export-teams','green')}
@@ -637,7 +637,7 @@ async function startAuction(isOnline){
   if(!isOnline&&names.length<2)return alert('ローカル1端末モードでは参加者を2人以上入力してください');
   if(names.length>40)return alert('参加者は最大40人までです');
 
-  const budgetStart=Math.max(0,Number($('#auc-budget').value)??1000000);
+  const budgetStart=Math.max(0,Number($('#auc-budget').value)??300000);
   const maxPicks=Math.max(0,Number($('#auc-max-picks').value)||0);
   const maxLots=Math.max(0,Number($('#auc-max-lots')?.value)||0);
   const timerDuration=Math.max(0,Number($('#auc-timer-sec').value)||0);
@@ -872,7 +872,7 @@ async function joinAuctionRoom(){
   if(idx<0){
     if(remote.players.length>=40)return alert('ルームの定員（40人）に達しています');
     remote.players.push({name:myName,picks:[]});
-    remote.balances.push(remote.budgetStart??1000000);
+    remote.balances.push(remote.budgetStart??300000);
     idx=remote.players.length-1;
     remote.joinLogs.push({date:new Date().toISOString(),message:`${myName} が参加しました`});
     if(remote.joinLogs.length>15)remote.joinLogs=remote.joinLogs.slice(-15);

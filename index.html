@@ -26,7 +26,7 @@ window.PCC_DATA={"pokemon":[{"dex":3,"name":"フシギバナ","form":"通常","t
 'use strict';
 const DATA=window.PCC_DATA||{pokemon:[],moves:[],abilities:[],items:[],ideas:[],weightData:[],meta:{}};
 const DB_NAME='pokemon-champions-casino-v060',DB_VERSION=1,STORE='state';
-const DEFAULT={version:11,masterDataVersion:11,settings:{theme:'light',fontSize:15,animations:true,skip:false,firebaseUrl:''},ideas:DATA.ideas||[],pokemon:DATA.pokemon||[],moves:DATA.moves||[],abilities:DATA.abilities||[],items:DATA.items||[],weightData:DATA.weightData||[],ideaHistory:[],pokemonHistory:[],itemHistory:[],teams:[],savedIdeas:[],draft:null,auction:null,battleHistory:[],tournaments:[],tournamentImageHistory:[],gachaHistory:[],lastUpdated:new Date().toISOString()};
+const DEFAULT={version:12,masterDataVersion:12,settings:{theme:'light',fontSize:15,animations:true,skip:false,firebaseUrl:''},ideas:DATA.ideas||[],pokemon:DATA.pokemon||[],moves:DATA.moves||[],abilities:DATA.abilities||[],items:DATA.items||[],weightData:DATA.weightData||[],ideaHistory:[],pokemonHistory:[],itemHistory:[],teams:[],savedIdeas:[],draft:null,auction:null,battleHistory:[],tournaments:[],tournamentImageHistory:[],gachaHistory:[],lastUpdated:new Date().toISOString()};
 let state,db,active='home',lastDraw=[],gachaSession={pool:[],count:6,rerolls:0};
 let onlineRoom={code:'',role:'local',playerName:'',playerIdx:0,timer:null,uiTimer:null,lastJson:'',syncing:false,error:''};
 let prefillTournamentPlayers='';
@@ -100,7 +100,7 @@ function field(label,control){return `<div class="field"><label>${label}</label>
 function btn(text,act,cls=''){return `<button class="${cls}" data-act="${act}">${text}</button>`}
 function render(){const m=$('#main');if(!m)return;switch(active){case'home':m.innerHTML=homePage();break;case'a':m.innerHTML=aPage();break;case'b':m.innerHTML=bPage();break;case'c':m.innerHTML=cPage();break;case'd':m.innerHTML=dPage();break;case'e':m.innerHTML=ePage();break;case'data':m.innerHTML=dataPage();break;case'help':m.innerHTML=helpPage();break;case'settings':m.innerHTML=settingsPage();break;default:m.innerHTML=homePage()} }
 
-function homePage(){return `${head('Pokémon Champions Casino','企画・抽選・ドラフト・オークション・大会をまとめて管理。','LOCAL & ONLINE HUB')}<div class="hero"><h1>運と戦略で、自分だけのバトルを。</h1><p>基本機能は端末内で完結し、オークション（D）では招待URLからスマホ・PCで参加してリアルタイム入札＆時間制売却タイム・福袋が可能です。</p></div><div class="stat-grid"><div class="stat"><b>${state.pokemon.length}</b><small>ポケモン記録</small></div><div class="stat"><b>${state.moves.length}</b><small>技</small></div><div class="stat"><b>${state.abilities.length}</b><small>特性</small></div><div class="stat"><b>${state.items.length}</b><small>道具名</small></div></div><div class="grid three">${card('🎯 A：企画ルーレット',`<p>重み付き抽選、お気に入り、保存、履歴。</p>${btn('企画を開く','go-a')}`)}${card('🎲 B：ポケモン・道具',`<p>重複なし抽選、チーム保存、画像出力。</p>${btn('抽選を開く','go-b','green')}`)}${card('⚔ C：ドラフト・対戦',`<p>スネーク・固定順・ランダム順、スカウト、ガチャ、対戦記録。</p>${btn('ドラフトを開く','go-c','orange')}`)}${card('💰 D：オークション',`<p>招待URL参加・入室通知・タイマー・リアルタイム入札・時間制売却タイム・福袋。</p>${btn('オークションを開く','go-d','orange')}`)}${card('🏆 E：大会管理',`<p>11形式、対戦表、勝敗、順位、履歴。</p>${btn('大会を開く','go-e','purple')}`)}</div><h2 class="section-title">データの確認</h2><div class="notice">提供された6種類のデータを登録済みです。すぐに各機能を利用できます。更新・追加はデータ管理から行えます。</div><div class="footer">非公式の個人用ファンツール。ゲームとの直接連携はありません。</div>`}
+function homePage(){return `${head('Pokémon Champions Casino','企画・抽選・ドラフト・オークション・大会をまとめて管理。','LOCAL & ONLINE HUB')}<div class="hero"><h1>運と戦略で、自分だけのバトルを。</h1><p>基本機能は端末内で完結し、オークション（D）では招待URLからスマホ・PCで参加してリアルタイム入札＆定期売却フェーズ・福袋が可能です。</p></div><div class="stat-grid"><div class="stat"><b>${state.pokemon.length}</b><small>ポケモン記録</small></div><div class="stat"><b>${state.moves.length}</b><small>技</small></div><div class="stat"><b>${state.abilities.length}</b><small>特性</small></div><div class="stat"><b>${state.items.length}</b><small>道具名</small></div></div><div class="grid three">${card('🎯 A：企画ルーレット',`<p>重み付き抽選、お気に入り、保存、履歴。</p>${btn('企画を開く','go-a')}`)}${card('🎲 B：ポケモン・道具',`<p>重複なし抽選、チーム保存、画像出力。</p>${btn('抽選を開く','go-b','green')}`)}${card('⚔ C：ドラフト・対戦',`<p>スネーク・固定順・ランダム順、スカウト、ガチャ、対戦記録。</p>${btn('ドラフトを開く','go-c','orange')}`)}${card('💰 D：オークション',`<p>5回ごとの売却フェーズ自動切替・タイマー・福袋（落札後リセット）・リアルタイム入札。</p>${btn('オークションを開く','go-d','orange')}`)}${card('🏆 E：大会管理',`<p>11形式、対戦表、勝敗、順位、履歴。</p>${btn('大会を開く','go-e','purple')}`)}</div><h2 class="section-title">データの確認</h2><div class="notice">提供された6種類のデータを登録済みです。すぐに各機能を利用できます。更新・追加はデータ管理から行えます。</div><div class="footer">非公式の個人用ファンツール。ゲームとの直接連携はありません。</div>`}
 
 function aPage(){const cats=[...new Set(state.ideas.map(x=>x.category))];return `${head('A：企画ルーレット','企画を重み付きで抽選。重みの合計が100でなくても実行できます。','MODE A')}${state.ideas.length?'':'<div class="notice">企画データが未登録です。データ管理から企画CSVを読み込んでください。</div>'}<div class="grid"><section class="card"><h3>抽選設定</h3>${field('カテゴリー',`<select id="a-cat"><option value="*">すべて</option>${cats.map(c=>`<option>${esc(c)}</option>`).join('')}</select>`)}${field('抽選数',`<select id="a-count">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<option ${n===1?'selected':''}>${n}</option>`).join('')}</select>`)}<div class="actions">${btn('抽選する','draw-idea')}</div><div id="a-result"></div></section><section class="card"><h3>企画の追加</h3>${field('カテゴリー',`<input id="idea-cat" placeholder="例：タイプ系">`)}${field('企画名',`<input id="idea-name" placeholder="企画名">`)}${field('重み',`<input id="idea-weight" type="number" min="0" step="0.1" value="1">`)}${btn('企画を追加','add-idea')}</section></div><h2 class="section-title">企画一覧・重み設定</h2><div class="list">${state.ideas.map(x=>`<div class="list-row"><div><b>${esc(x.name)}</b><small>${esc(x.category)}</small><label class="small muted" for="idea-weight-${x.id}">抽選重み</label><input id="idea-weight-${x.id}" type="number" min="0" step="0.1" value="${Number(x.weight)||0}" style="width:100px;padding:6px 8px"></div><div class="row-actions"><button class="secondary" data-act="save-idea-weight" data-id="${x.id}">重み保存</button><button class="secondary" data-act="fav-idea" data-id="${x.id}">${x.favorite?'★':'☆'}</button><button class="secondary" data-act="save-idea" data-id="${x.id}">保存</button><button class="danger" data-act="del-idea" data-id="${x.id}">削除</button></div></div>`).join('')||'<div class="empty">企画データがありません</div>'}</div><h2 class="section-title">お気に入り・個別保存</h2>${card('お気に入り',state.ideas.filter(x=>x.favorite).map(x=>`<span class="pill">${esc(x.name)}</span>`).join('')||'<p>まだありません</p>')}${card('個別保存',state.savedIdeas.map(x=>`<div class="list-row"><b>${esc(x.name)}</b><button class="danger" data-act="unsave-idea" data-id="${x.id}">削除</button></div>`).join('')||'<p>保存した企画はありません</p>')}<h2 class="section-title">抽選履歴</h2>${historyList('ideaHistory')}`}
 function historyList(key){const arr=state[key]||[];return arr.length?`<div class="list">${arr.map((h,i)=>`<div class="list-row"><div><b>${esc(h.title||h.result||'履歴')}</b><small>${dateLabel(h.date)}</small></div><div class="row-actions"><button class="secondary" data-act="history-show" data-key="${key}" data-index="${i}">詳細</button><button class="danger" data-act="history-del" data-key="${key}" data-index="${i}">削除</button></div></div>`).join('')}</div>`:'<div class="empty">履歴はありません</div>'}
@@ -110,14 +110,14 @@ function cPage(){let d=state.draft;return `${head('C：ドラフト・対戦','3
 
 function draftBoard(){let d=state.draft;return `<h2 class="section-title">進行中のドラフト</h2><div class="card"><div class="row"><div><b>${esc({snake:'スネーク',fixed:'固定順',random:'毎ラウンドランダム'}[d.mode]||'ドラフト')}</b><small class="muted"> ${d.rounds}ラウンド · ${d.players.length}人</small></div>${btn('ドラフトを終了','end-draft','danger')}</div><div class="list">${d.players.map((p,i)=>`<div class="list-row"><div><b>${esc(p.name)} ${d.order[d.pickIndex]===i&&d.round<d.rounds?'（指名順）':''}</b><small>指名 ${p.picks.length}体：${p.picks.map(x=>esc(x.name)).join('、')||'なし'}</small></div><div class="row-actions"><select id="draft-choice-${i}" ${d.order[d.pickIndex]!==i||d.round>=d.rounds?'disabled':''}>${state.pokemon.filter(x=>!d.players.some(pp=>pp.picks.some(pk=>pk.dex===x.dex))).map(x=>`<option value="${esc(x.name)}">${esc(x.name)}（No.${x.dex}）</option>`).join('')}</select><button data-act="draft-pick" data-player="${i}" ${d.order[d.pickIndex]!==i||d.round>=d.rounds?'disabled':''}>指名する</button></div></div>`).join('')}</div><div class="notice">各プレイヤーの指名は1体ずつ記録されます。スネークはラウンドごとに順番を反転します。</div></div>`}
 
-// D：独立オークション画面（指定出品数または手動発動で制限時間付きの「売却タイム」を発生）
+// D：独立オークション画面（5回ごとの売却フェーズ画面自動切替＋福袋の落札後中身リセット対応）
 function dPage(){
   const auc=state.auction;
   const fbUrl=state.settings.firebaseUrl||'';
   const isOnline=onlineRoom.role!=='local'&&onlineRoom.code;
   const isGuest=onlineRoom.role==='guest';
 
-  return `${head('D：オークション','一定数進んだ段階や任意のタイミングで制限時間付きの「売却タイム」が発生。売却・スキップ品は福袋へ。','MODE D · AUCTION')}
+  return `${head('D：オークション','5回ごとに制限時間付きの「売却フェーズ」へ画面が切り替わります。福袋は落札後に中身がリセットされます。','MODE D · AUCTION')}
   <div class="grid">
     <section class="card">
       <h3>🌐 オンラインルーム接続・参加</h3>
@@ -154,9 +154,9 @@ function dPage(){
         ${field('入札制限時間（秒 / 0なし）',`<input id="auc-timer-sec" type="number" min="0" max="300" step="5" value="${auc?.timerDuration??30}">`)}
       </div>
       <div class="row">
-        ${field('売却タイム発生の出品数（0で自動なし）',`<input id="auc-sell-trigger" type="number" min="0" max="99" value="${auc?.sellTriggerLot??5}">`)}
-        ${field('売却タイムの制限時間（秒）',`<input id="auc-sell-duration" type="number" min="5" max="300" step="5" value="${auc?.sellDuration??45}">`)}
-        ${field('福袋を出す出品順（0でなし）',`<input id="auc-bag-slot" type="number" min="0" max="99" value="${auc?.bagSlot??10}">`)}
+        ${field('売却フェーズ間隔（何匹ごと / 0なし）',`<input id="auc-sell-interval" type="number" min="0" max="50" value="${auc?.sellInterval??5}">`)}
+        ${field('売却フェーズ制限時間（秒）',`<input id="auc-sell-duration" type="number" min="5" max="300" step="5" value="${auc?.sellDuration??45}">`)}
+        ${field('福袋の登場間隔（何匹ごと / 0なし）',`<input id="auc-bag-interval" type="number" min="0" max="99" value="${auc?.bagInterval??10}">`)}
       </div>
       <div class="actions">
         ${btn('オンラインルームを作成（待機状態）','auc-start-online','green')}
@@ -165,7 +165,7 @@ function dPage(){
     </section>`:`<section class="card">
       <h3>📱 参加ガイド</h3>
       <p>1. 上の「あなたのユーザー名」に自分の名前を入れて<b>「ルームに参加する」</b>を押してください。</p>
-      <p>2. オークションが一定数進んだ段階などで<b>「売却タイム」</b>が発生します。制限時間内に手持ちポケモンを半額で売却できます。</p>
+      <p>2. 5回ごと（設定間隔ごと）に画面が<b>「💸 売却フェーズ」</b>に切り替わり、制限時間内に手持ちポケモンを半額売却できます。</p>
     </section>`}
   </div>
   ${auc?auctionBoard(auc):'<div class="empty">ルームはまだ作成されていません。主催者がルームを作成するか、ルームIDを入力して参加してください。</div>'}`;
@@ -181,8 +181,8 @@ function halfRefund(price){
   return Math.floor((Number(price)||0)/2);
 }
 
-function isSellTimeActive(auc){
-  return Boolean(auc?.sellTimeEndsAt && Date.now() < auc.sellTimeEndsAt);
+function isSellPhaseActive(auc){
+  return Boolean(auc?.phase==='selling' && (!auc?.sellTimeEndsAt || Date.now() < auc.sellTimeEndsAt));
 }
 
 function auctionBoard(auc){
@@ -198,10 +198,11 @@ function auctionBoard(auc){
   const joinLogs=(auc.joinLogs||[]).slice(-6).reverse();
   const isStarted=Boolean(auc.started);
   const bagItems=auc.bagPool||[];
-  const bagSlot=Number(auc.bagSlot)||0;
-  const lotNum=(auc.lotCount||0);
-  const sellActive=isSellTimeActive(auc);
-  const sellRemain=sellActive?formatRemainSec(auc.sellTimeEndsAt):null;
+  const bagInterval=Number(auc.bagInterval)||0;
+  const sellInterval=Number(auc.sellInterval)||0;
+  const completedCount=Number(auc.completedCount)||0;
+  const sellActive=isSellPhaseActive(auc);
+  const sellRemain=(sellActive&&auc.sellTimeEndsAt)?formatRemainSec(auc.sellTimeEndsAt):null;
 
   let myIdx=onlineRoom.playerIdx;
   if(isOnline&&onlineRoom.playerName){
@@ -211,20 +212,10 @@ function auctionBoard(auc){
 
   const remain=a?.endsAt?formatRemainSec(a.endsAt):null;
 
-  return `<h2 class="section-title">オークション会場 ${isOnline?`<span class="badge">ROOM: ${esc(onlineRoom.code)}</span>`:'<span class="badge">LOCAL</span>'} ${!isStarted?'<span class="badge" style="background:var(--orange);color:#fff">開始待機中</span>':sellActive?'<span class="badge" style="background:var(--purple);color:#fff">💸 売却タイム中</span>':'<span class="badge" style="background:var(--green);color:#fff">進行中</span>'} <span class="badge" style="background:var(--blue);color:#fff">🎁 福袋：${bagItems.length}体${bagSlot?'（'+bagSlot+'匹目予定）':''}</span></h2>
+  return `<h2 class="section-title">オークション会場 ${isOnline?`<span class="badge">ROOM: ${esc(onlineRoom.code)}</span>`:'<span class="badge">LOCAL</span>'} ${!isStarted?'<span class="badge" style="background:var(--orange);color:#fff">開始待機中</span>':sellActive?'<span class="badge" style="background:var(--purple);color:#fff">💸 売却フェーズ画面</span>':'<span class="badge" style="background:var(--green);color:#fff">⚔ 入札フェーズ</span>'} <span class="badge" style="background:var(--blue);color:#fff">🎁 福袋：${bagItems.length}体${bagInterval?'（'+bagInterval+'回ごと）':''}</span></h2>
 
   ${joinLogs.length?`<div class="notice success" style="padding:10px 14px">
     <b>📣 進行・参加ログ：</b> ${joinLogs.map(l=>`<span class="pill" style="background:var(--green);color:#fff">${esc(l.message)}</span>`).join(' ')}
-  </div>`:''}
-
-  ${sellActive?`<div class="card" style="border:2px solid var(--purple);margin-bottom:17px">
-    <div class="row">
-      <div>
-        <div class="row"><h3 style="margin:0">💸 売却タイム開催中！</h3><span id="sell-countdown-badge" class="pill" style="font-size:15px;font-weight:800;background:var(--purple);color:#fff">⏱ 残り ${sellRemain} 秒</span></div>
-        <p>下の「参加プレイヤー一覧」から手持ちポケモンを半額で売却できます。売却されたポケモンは福袋へ入ります。</p>
-      </div>
-      ${!isGuest?`<div class="fit">${btn('売却タイムを終了する','auc-end-selltime','secondary')}</div>`:''}
-    </div>
   </div>`:''}
 
   ${!isStarted?`<div class="card" style="border:2px solid var(--orange);margin-bottom:17px">
@@ -239,26 +230,27 @@ function auctionBoard(auc){
 
   ${!isGuest?`<section class="card" style="margin-bottom:17px">
     <div class="row">
-      <div><b>主催者コントロール（出品・売却タイム・福袋設定）</b><small class="muted">出品数：${lotNum}回目 ／ 売却発生：${auc.sellTriggerLot?auc.sellTriggerLot+'回目（'+auc.sellDuration+'秒）':'手動のみ'} ／ 福袋：${bagSlot?bagSlot+'匹目':'手動のみ'}</small></div>
+      <div><b>主催者コントロール（進行・売却フェーズ・福袋管理）</b><small class="muted">終了出品数：${completedCount}回 ／ 売却間隔：${sellInterval?sellInterval+'回ごと（'+auc.sellDuration+'秒）':'手動のみ'} ／ 福袋間隔：${bagInterval?bagInterval+'回ごと':'手動のみ'}</small></div>
       <div class="row-actions">
-        ${btn(`💸 売却タイム開始（${auc.sellDuration||45}秒）`,'auc-start-selltime','purple')}
-        ${bagItems.length?btn(`🎁 今すぐ福袋（${bagItems.length}体）を出品`,'auc-force-bag','orange'):''}
+        ${!sellActive?btn(`💸 売却フェーズへ切替（${auc.sellDuration||45}秒）`,'auc-start-selltime','purple'):btn('⚔ 売却フェーズを終了して入札へ戻る','auc-end-selltime','orange')}
+        ${bagItems.length?btn(`🎁 今すぐ福袋（${bagItems.length}体）を出品`,'auc-force-bag','secondary'):''}
+        ${bagItems.length?btn('🗑 福袋中身をリセット','auc-reset-bag','secondary'):''}
         ${btn('結果をチーム保存（Bへ）','auc-export-teams','green')}
         ${btn('参加者で大会作成（Eへ）','auc-to-tournament','secondary')}
         ${btn('ルームを閉じる','auc-end','danger')}
       </div>
     </div>
     <div class="row" style="margin-top:10px">
-      ${field('売却発生の出品数（0で自動なし）',`<input id="auc-live-sell-lot" type="number" min="0" max="99" value="${auc.sellTriggerLot??5}">`)}
-      ${field('売却タイム時間（秒）',`<input id="auc-live-sell-dur" type="number" min="5" max="300" step="5" value="${auc.sellDuration??45}">`)}
-      ${field('福袋を出す出品順（0でなし）',`<input id="auc-live-bag-slot" type="number" min="0" max="99" value="${bagSlot}">`)}
+      ${field('売却フェーズ間隔（何匹ごと / 0なし）',`<input id="auc-live-sell-int" type="number" min="0" max="50" value="${sellInterval}">`)}
+      ${field('売却フェーズ制限時間（秒）',`<input id="auc-live-sell-dur" type="number" min="5" max="300" step="5" value="${auc.sellDuration??45}">`)}
+      ${field('福袋の登場間隔（何匹ごと / 0なし）',`<input id="auc-live-bag-int" type="number" min="0" max="99" value="${bagInterval}">`)}
       <div class="fit" style="align-self:flex-end;margin-bottom:12px">${btn('ルール設定を反映','auc-update-rules','secondary')}</div>
     </div>
     <div class="inline-check" style="margin:0 0 8px 0">
       <input type="checkbox" id="auc-auto-next" ${auc.autoNext!==false?'checked':''}>
-      <label for="auc-auto-next">落札確定後に自動で次のポケモンを出品する</label>
+      <label for="auc-auto-next">落札確定（または売却フェーズ終了）後に自動で次のポケモンを出品する</label>
     </div>
-    <div class="grid" style="margin-top:6px">
+    ${!sellActive?`<div class="grid" style="margin-top:6px">
       <div style="background:var(--panel2);padding:13px;border-radius:12px">
         <b>① 条件付きランダム出品（即時タイマー開始）</b>
         <div class="row">
@@ -273,9 +265,23 @@ function auctionBoard(auc){
         ${field('出品するポケモンを選択',`<select id="auc-manual-poke">${manualCandidates.map(p=>`<option value="${esc(p.name)}">No.${p.dex} ${esc(p.name)}（合計${sumStats(p)}）</option>`).join('')}</select>`)}
         ${btn('このポケモンを出品する','auc-manual-lot','purple')}
       </div>
-    </div>
+    </div>`:''}
   </section>`:''}
 
+  ${sellActive?`
+  <section class="card" style="border:3px solid var(--purple);background:rgba(129,85,184,0.06);margin-bottom:17px">
+    <div class="row">
+      <div>
+        <div class="row">
+          <h2 style="margin:0;color:var(--purple)">💸 売却フェーズ（${completedCount}回目区切り）</h2>
+          ${sellRemain!==null?`<span id="sell-countdown-badge" class="pill" style="font-size:17px;font-weight:800;background:${sellRemain<=5?'var(--danger)':'var(--purple)'};color:#fff">⏱ 残り ${sellRemain} 秒</span>`:''}
+        </div>
+        <p>現在は売却専用画面です。手放したいポケモンの <b>「半額売却」</b> ボタンを押すと、落札額の50%が返還され、ポケモンは<b>福袋</b>へ移動します。</p>
+      </div>
+      ${!isGuest?`<div class="fit">${btn('⚔ 売却フェーズを終了して入札へ戻る','auc-end-selltime','orange')}</div>`:''}
+    </div>
+  </section>
+  `:`
   <div class="grid">
     <section class="card">
       <div class="row">
@@ -285,7 +291,7 @@ function auctionBoard(auc){
       ${a?`<div class="result" style="margin-top:10px;${isBagLot?'border-color:var(--purple);background:rgba(129,85,184,0.08)':''}">
         <div class="pokemon-card">
           <b>${esc(a.pokemon)}</b>
-          <small>${isBagLot?`売却・スキップ済みの詰め合わせ（${(a.bagContents||[]).length}体セット）`:`No.${curPoke?.dex??a.dex??'不明'} · ${(curPoke?.types||[]).map(esc).join('・')||'タイプ不明'} · ${esc(a.sourceLabel||'出品')}`}</small>
+          <small>${isBagLot?`売却・スキップ済みの詰め合わせ（${(a.bagContents||[]).length}体セット／落札後に中身リセット）`:`No.${curPoke?.dex??a.dex??'不明'} · ${(curPoke?.types||[]).map(esc).join('・')||'タイプ不明'} · ${esc(a.sourceLabel||'出品')}`}</small>
           ${isBagLot?`<small><b>中身：</b>${(a.bagContents||[]).map(x=>esc(x.name)).join('、')||'なし'}</small>`:(curPoke?`<small>種族値：${curPoke.stats.join('-')}（合計 ${sumStats(curPoke)}）</small><small>特性：${(curPoke.abilities||[]).map(esc).join('、')}</small>`:'')}
         </div>
         <div style="margin-top:12px;font-size:18px">
@@ -322,8 +328,9 @@ function auctionBoard(auc){
       }).join('')||'<div class="empty">入札はまだありません</div>'}</div>
     </section>
   </div>
+  `}
 
-  <h2 class="section-title">参加プレイヤー一覧（${auc.players.length}人・${sellActive?'💸 売却タイム有効中':'売却タイム外は売却不可'}）</h2>
+  <h2 class="section-title">参加プレイヤー一覧（${auc.players.length}人・${sellActive?'💸 半額売却受付中':'通常の入札フェーズ中'}）</h2>
   <div class="grid">${auc.players.map((p,i)=>{
     const picks=p.picks||[];
     const full=maxPicks>0&&picks.length>=maxPicks;
@@ -347,7 +354,8 @@ function auctionBoard(auc){
     </div>`;
   }).join('')}</div>
 
-  ${bagItems.length?`<h2 class="section-title">🎁 現在の福袋ストック（${bagItems.length}体・${bagSlot?bagSlot+'匹目で登場':'手動出品待ち'}）</h2><div class="list">${bagItems.map(x=>`<div class="list-row"><b>${esc(x.name)}</b><small>${esc(x.reason||'売却・スキップ')}</small></div>`).join('')}</div>`:''}
+  <h2 class="section-title">🎁 現在の福袋ストック（${bagItems.length}体・${bagInterval?bagInterval+'回ごとに登場＆落札後リセット':'手動出品待ち'}）</h2>
+  ${bagItems.length?`<div class="list">${bagItems.map(x=>`<div class="list-row"><b>${esc(x.name)}</b><small>${esc(x.reason||'売却・スキップ')}</small></div>`).join('')}</div>`:'<div class="empty">現在、福袋の中身は空です（売却・スキップされたポケモンがここに入ります）</div>'}
 
   ${auc.auctionHistory?.length?`<h2 class="section-title">落札・売却・スキップ履歴</h2><div class="list">${auc.auctionHistory.slice().reverse().map(x=>`<div class="list-row"><b>${esc(x.pokemon)}</b><small>${x.sold?'💸 '+esc(x.winnerName||'')+' が '+x.amount.toLocaleString()+' オルカで半額売却（福袋へ）':x.winner===null?'⏭ 入札なし・スキップ（福袋へ）':esc(x.winnerName||auc.players[x.winner]?.name||'')+' が '+x.amount.toLocaleString()+' オルカで落札'}</small></div>`).join('')}</div>`:''}`;
 }
@@ -355,7 +363,7 @@ function auctionBoard(auc){
 function ePage(){const formats=['チーム総当たり','個人総当たり','ノックアウト','トーナメント','勝ち点制','勝率ランキング','シングル・ダブル混合','3体固定選出','勝利数ポイントレース','敗者交代制','1体中心チーム戦'];const defaultPlayers=prefillTournamentPlayers||(state.auction?state.auction.players.map(p=>p.name).join('\n'):'');return `${head('E：大会管理','11種類の形式に対応。対戦表の生成、勝敗入力、途中参加・離脱、順位管理。','MODE E')}<section class="card"><h3>大会を作成</h3>${field('大会形式',`<select id="t-format">${formats.map((x,i)=>`<option value="${i}">${x}</option>`).join('')}</select>`)}${field('参加者（1行に1人、2〜40人）',`<textarea id="t-players" placeholder="プレイヤーA&#10;プレイヤーB&#10;プレイヤーC&#10;プレイヤーD">${esc(defaultPlayers)}</textarea>`)}<div class="row">${field('シード',`<select id="t-seed"><option value="random">ランダム</option><option value="manual">入力順（手動）</option></select>`)}${field('対戦',`<select id="t-game"><option value="single">シングル</option><option value="double">ダブル</option><option value="mixed">混合</option></select>`)}</div>${btn('大会・対戦表を作成','t-create','purple')}</section>${state.tournamentImageHistory?.length?`<h2 class="section-title">大会結果画像の履歴（直近3件）</h2><div class="list">${state.tournamentImageHistory.map(x=>`<div class="list-row"><div><b>${esc(x.name)}</b><small>${dateLabel(x.date)}</small></div><button class="secondary" data-act="t-image-show" data-id="${x.id}">表示</button></div>`).join('')}</div>`:''}${state.tournaments.length?`<h2 class="section-title">保存中・過去の大会</h2><div class="list">${state.tournaments.map(t=>`<div class="list-row"><div><b>${esc(t.name)}</b><small>${esc(t.formatName)} · ${dateLabel(t.date)} · ${t.players.length}人</small></div><div class="row-actions"><button class="secondary" data-act="t-open" data-id="${t.id}">開く</button><button class="danger" data-act="t-del" data-id="${t.id}">削除</button></div></div>`).join('')}</div>`:'<div class="empty">大会履歴はありません</div>'}<div id="t-detail"></div>`}
 
 function dataPage(){const kinds=[['pokemon','ポケモン'],['moves','技'],['abilities','特性'],['items','道具・きのみ'],['ideas','企画'],['weightData','重さデータ']];const opts=kinds.map(x=>`<option value="${x[0]}">${x[1]}</option>`).join('');const stats=kinds.map(x=>`<div class="stat"><b>${(state[x[0]]||[]).length}</b><small>${x[1]}</small></div>`).join('');return `${head('データ管理','CSVを読み込んで、アプリ内の抽選・検索・大会機能に反映します。','DATA CENTER')}<div class="notice">6種類のマスターデータを初期登録済みです。CSVはこの端末のブラウザ内に保存されます。読み込み前に内容を確認し、必ず元CSVとJSONバックアップを保管してください。</div><div class="stat-grid">${stats}</div><div class="grid"><section class="card"><h3>CSVを読み込む</h3><p>1種類ずつ読み込みます。1行目は列名（ヘッダー）にしてください。</p>${field('データの種類',`<select id="csv-import-kind">${opts}</select>`)}<input type="file" id="csv-import-file" accept=".csv,text/csv"><div class="actions">${btn('CSVを確認して読み込む','csv-import','green')}</div><p class="small muted">同じ名前のデータは既存レコードを更新し、新しい名前は追加します。読み込み前に件数と重複数を確認します。</p></section><section class="card"><h3>CSVテンプレート</h3><p>必要な列名を含む空のテンプレートをダウンロードできます。</p>${field('種類',`<select id="csv-template-kind">${opts}</select>`)}${btn('テンプレートをダウンロード','csv-template','secondary')}</section></div><div class="grid"><section class="card"><h3>データ検索・確認</h3>${field('種類',`<select id="data-kind">${opts}</select>`)}${field('キーワード',`<input id="data-query" placeholder="名前・タイプ・効果など">`)}${btn('検索','data-search')}<div id="data-results"></div></section><section class="card"><h3>CSVを書き出す</h3>${field('種類',`<select id="csv-kind">${opts}</select>`)}${btn('CSVをダウンロード','csv-export','secondary')}</section></div><div class="grid"><section class="card"><h3>JSONバックアップ</h3><p>マスターデータ、設定、チーム、履歴、大会の情報をまとめて保存します。</p>${btn('バックアップを保存','backup','green')}</section><section class="card"><h3>JSON復元</h3><p>バックアップの内容で現在のデータを置き換えます。復元前に現在の状態を保存してください。</p><input type="file" id="restore-file" accept=".json,application/json">${btn('バックアップを復元','restore','danger')}</section></div>`}
-function helpPage(){const sections=[['基本操作','ホームから各機能へ移動します。入力内容や結果は端末内に自動保存されます。'],['A：企画ルーレット','登録済み企画をカテゴリーや重みに応じて抽選します。'],['B：ポケモン・道具抽選','登録済みポケモンや道具から重複を避けて抽選します。'],['C：ドラフト','スネークはラウンドごとに指名順を反転、固定順は順番を維持、ランダム順はラウンドごとに順番を抽選します。'],['D：オークション（時間制売却タイム＆福袋）','指定した出品数に到達した段階、または主催者ボタンで制限時間付きの「売却タイム」が発生します。売却タイム中だけ手持ちポケモンを半額売却でき、売却・スキップされたポケモンは福袋へ入ります。'],['E：大会管理','大会形式を選び、参加者を登録して対戦表を作ります。オークションの参加者をそのまま引き継ぐこともできます。']];return `${head('ヘルプ・用語説明','機能の意味や操作方法をいつでも確認できます。','HELP & GUIDE')}<div class="help-list">${sections.map(([t,d])=>`<details class="card help-item" open><summary>${esc(t)}</summary><p>${esc(d)}</p></details>`).join('')}</div>`}
+function helpPage(){const sections=[['基本操作','ホームから各機能へ移動します。入力内容や結果は端末内に自動保存されます。'],['A：企画ルーレット','登録済み企画をカテゴリーや重みに応じて抽選します。'],['B：ポケモン・道具抽選','登録済みポケモンや道具から重複を避けて抽選します。'],['C：ドラフト','スネークはラウンドごとに指名順を反転、固定順は順番を維持、ランダム順はラウンドごとに順番を抽選します。'],['D：オークション（5回ごとの売却フェーズ＆福袋リセット）','5回ごと（設定間隔ごと）に自動的に売却フェーズ画面へ切り替わり、制限時間内に手持ちポケモンを半額売却できます。売却・スキップされたポケモンは福袋に蓄積され、規定回数ごとに出品されて落札後に中身がリセットされます。'],['E：大会管理','大会形式を選び、参加者を登録して対戦表を作ります。オークションの参加者をそのまま引き継ぐこともできます。']];return `${head('ヘルプ・用語説明','機能の意味や操作方法をいつでも確認できます。','HELP & GUIDE')}<div class="help-list">${sections.map(([t,d])=>`<details class="card help-item" open><summary>${esc(t)}</summary><p>${esc(d)}</p></details>`).join('')}</div>`}
 function downloadTemplate(){const kind=$('#csv-template-kind')?.value||'pokemon';const headers={pokemon:['dex','name','form','types','stats','abilities','height','weight','generation','evolution','classification','normalColor','shinyColor'],moves:['name','type','category','power','accuracy','pp','contact','protect','target','effect'],abilities:['name','effect','pokemon'],items:['name','kind','effect','acquisition'],ideas:['category','name','weight'],weightData:['rank','dex','name','baseStats','weightKg','sourceColumn6']};const csv='\ufeff'+headers[kind].map(csvCell).join(',')+'\r\n';download(csv,`PCC_${kind}_template.csv`,'text/csv;charset=utf-8')}
 function settingsPage(){return `${head('設定','表示・操作・保存の設定。','SETTINGS')}<section class="card"><h3>表示設定</h3>${field('テーマ',`<select id="set-theme"><option value="light" ${state.settings.theme==='light'?'selected':''}>白・ライト</option><option value="dark" ${state.settings.theme==='dark'?'selected':''}>黒・ダーク</option></select>`)}${field('文字サイズ',`<select id="set-font"><option value="13">小さめ</option><option value="15" ${state.settings.fontSize===15?'selected':''}>標準</option><option value="17">大きめ</option><option value="19">特大</option></select>`)}<div class="inline-check"><input type="checkbox" id="set-anim" ${state.settings.animations?'checked':''}><label for="set-anim">抽選演出を有効にする</label></div><div class="inline-check"><input type="checkbox" id="set-skip" ${state.settings.skip?'checked':''}><label for="set-skip">抽選結果をすぐ表示する</label></div>${btn('設定を保存','settings-save')}</section><section class="card"><h3>履歴保持数</h3>${field('企画・ポケモン・道具の履歴',`<select id="set-history"><option value="1" ${(state.settings.historyLimit||5)===1?'selected':''}>1件</option><option value="2" ${(state.settings.historyLimit||5)===2?'selected':''}>2件</option><option value="3" ${(state.settings.historyLimit||5)===3?'selected':''}>3件</option><option value="4" ${(state.settings.historyLimit||5)===4?'selected':''}>4件</option><option value="5" ${(state.settings.historyLimit||5)===5?'selected':''}>5件</option></select>`)}<p>古い履歴から削除します。</p>${btn('履歴保持数を保存','history-limit-save','secondary')}${btn('古い履歴を整理','trim-history','secondary')}</section>`}
 
@@ -364,7 +372,7 @@ function startUiTick(){
   onlineRoom.uiTimer=setInterval(async ()=>{
     if(active!=='d'||!state?.auction)return;
     const auc=state.auction;
-    if(auc.currentAuction?.endsAt){
+    if(auc.phase!=='selling'&&auc.currentAuction?.endsAt){
       const badge=$('#auc-countdown-badge');
       if(badge){
         const r=formatRemainSec(auc.currentAuction.endsAt);
@@ -372,14 +380,10 @@ function startUiTick(){
         badge.style.background=r<=5?'var(--danger)':'var(--blue)';
       }
     }
-    if(auc.sellTimeEndsAt){
+    if(auc.phase==='selling'&&auc.sellTimeEndsAt){
       const sBadge=$('#sell-countdown-badge');
       if(Date.now()>=auc.sellTimeEndsAt){
-        auc.sellTimeEndsAt=null;
-        auc.joinLogs=auc.joinLogs||[];
-        auc.joinLogs.push({date:new Date().toISOString(),message:'⏰ 売却タイムが終了しました'});
-        if(auc.joinLogs.length>15)auc.joinLogs=auc.joinLogs.slice(-15);
-        await syncAuctionAfterChange();
+        await finishSellPhase(true);
       }else if(sBadge){
         const sr=formatRemainSec(auc.sellTimeEndsAt);
         sBadge.textContent=`⏱ 残り ${sr} 秒`;
@@ -471,11 +475,12 @@ case'auc-save-fb':state.settings.firebaseUrl=normalizeFbUrl($('#auc-fb-url').val
 case'auc-start-local':await startAuction(false);break;
 case'auc-start-online':await startAuction(true);break;
 case'auc-begin':await beginAuction();break;
-case'auc-start-selltime':await triggerSellTime(null,true);break;
-case'auc-end-selltime':await endSellTimeManual();break;
+case'auc-start-selltime':await enterSellPhase(null,true);break;
+case'auc-end-selltime':await finishSellPhase(false);break;
 case'auc-sell-pick':await sellAuctionPick(Number(b.dataset.player),Number(b.dataset.pick));break;
 case'auc-update-rules':await updateAuctionRules();break;
 case'auc-force-bag':await forceBagLot();break;
+case'auc-reset-bag':await resetBagPool();break;
 case'auc-join-room':await joinAuctionRoom();break;
 case'auc-leave-room':stopOnlineSync();onlineRoom={code:'',role:'local',playerName:'',playerIdx:0,timer:null,uiTimer:onlineRoom.uiTimer,lastJson:'',syncing:false,error:''};render();break;
 case'auc-copy-invite':{
@@ -538,21 +543,20 @@ async function startAuction(isOnline){
   const budgetStart=Math.max(0,Number($('#auc-budget').value)||0);
   const maxPicks=Math.max(0,Number($('#auc-max-picks').value)||0);
   const timerDuration=Math.max(0,Number($('#auc-timer-sec').value)||0);
-  const sellTriggerLot=Math.max(0,Number($('#auc-sell-trigger')?.value)??5);
+  const sellInterval=Math.max(0,Number($('#auc-sell-interval')?.value)??5);
   const sellDuration=Math.max(5,Number($('#auc-sell-duration')?.value)??45);
-  const bagSlot=Math.max(0,Number($('#auc-bag-slot')?.value)??10);
+  const bagInterval=Math.max(0,Number($('#auc-bag-interval')?.value)??10);
 
   const auc={
     id:uid(),
     started:false,
+    phase:'bidding',
     autoNext:true,
-    lotCount:0,
-    sellTriggerLot,
+    completedCount:0,
+    sellInterval,
     sellDuration,
-    sellTriggeredDone:false,
     sellTimeEndsAt:null,
-    bagSlot,
-    bagUsed:false,
+    bagInterval,
     bagPool:[],
     players:names.map(name=>({name,picks:[]})),
     budgetEnabled:budgetStart>0,
@@ -584,6 +588,7 @@ async function beginAuction(){
   const auc=state.auction;if(!auc)return;
   if(auc.players.length<2)return alert('参加者が2人以上揃ってから開始してください');
   auc.started=true;
+  auc.phase='bidding';
   auc.joinLogs=auc.joinLogs||[];
   auc.joinLogs.push({date:new Date().toISOString(),message:'オークションが開始されました！'});
   if(!auc.currentAuction){
@@ -592,38 +597,44 @@ async function beginAuction(){
   await syncAuctionAfterChange();
 }
 
-async function triggerSellTime(customSec=null,manual=false){
+// 売却フェーズ画面への切り替え（制限時間付き）
+async function enterSellPhase(customSec=null,manual=false){
   const auc=state.auction;if(!auc)return;
   const sec=Math.max(5,Number(customSec??auc.sellDuration)??45);
+  auc.phase='selling';
   auc.sellDuration=sec;
   auc.sellTimeEndsAt=Date.now()+sec*1000;
   auc.joinLogs=auc.joinLogs||[];
-  auc.joinLogs.push({date:new Date().toISOString(),message:`💸 ${manual?'主催者が':auc.lotCount+'回目到達で'}売却タイム（${sec}秒）を開始しました！`});
+  auc.joinLogs.push({date:new Date().toISOString(),message:`💸 ${manual?'主催者が':auc.completedCount+'回終了区切りで'}売却フェーズ（${sec}秒）へ切り替えました！`});
   if(auc.joinLogs.length>15)auc.joinLogs=auc.joinLogs.slice(-15);
   await syncAuctionAfterChange();
 }
 
-async function endSellTimeManual(){
+// 売却フェーズ終了 → 入札フェーズへ画面復帰
+async function finishSellPhase(byTimeout=false){
   const auc=state.auction;if(!auc)return;
+  if(auc.phase!=='selling')return;
+  auc.phase='bidding';
   auc.sellTimeEndsAt=null;
   auc.joinLogs=auc.joinLogs||[];
-  auc.joinLogs.push({date:new Date().toISOString(),message:'⚔ 売却タイムを終了しました'});
+  auc.joinLogs.push({date:new Date().toISOString(),message:byTimeout?'⏰ 売却フェーズの時間が終了！入札フェーズへ戻ります':'⚔ 売却フェーズを終了し、入札フェーズへ戻ります'});
   if(auc.joinLogs.length>15)auc.joinLogs=auc.joinLogs.slice(-15);
+  if(!auc.currentAuction&&auc.autoNext!==false){
+    auc.currentAuction=makeNextLot(auc,auc.filter||{mega:'all',type:'*',maxBst:0},'ランダム選出');
+  }
   await syncAuctionAfterChange();
 }
 
 async function updateAuctionRules(){
   const auc=state.auction;if(!auc)return;
-  const sLot=Math.max(0,Number($('#auc-live-sell-lot')?.value)||0);
+  const sInt=Math.max(0,Number($('#auc-live-sell-int')?.value)||0);
   const sDur=Math.max(5,Number($('#auc-live-sell-dur')?.value)||45);
-  const bSlot=Math.max(0,Number($('#auc-live-bag-slot')?.value)||0);
-  auc.sellTriggerLot=sLot;
+  const bInt=Math.max(0,Number($('#auc-live-bag-int')?.value)||0);
+  auc.sellInterval=sInt;
   auc.sellDuration=sDur;
-  if(sLot>0&&(auc.lotCount||0)<sLot)auc.sellTriggeredDone=false;
-  auc.bagSlot=bSlot;
-  auc.bagUsed=false;
+  auc.bagInterval=bInt;
   await syncAuctionAfterChange();
-  alert('進行ルール（売却発生数・売却時間・福袋順）を反映しました');
+  alert('進行ルール（売却間隔・売却時間・福袋間隔）を反映しました');
 }
 
 async function forceBagLot(){
@@ -632,8 +643,18 @@ async function forceBagLot(){
   if(!bag.length)return alert('福袋に入っているポケモンがありません');
   if(auc.currentAuction&&!confirm('現在出品中のポケモンを破棄して、福袋を出品しますか？'))return;
   auc.started=true;
-  auc.bagUsed=true;
+  auc.phase='bidding';
   auc.currentAuction=buildBagLot(auc);
+  await syncAuctionAfterChange();
+}
+
+async function resetBagPool(){
+  const auc=state.auction;if(!auc)return;
+  if(!confirm('現在の福袋ストックを空にリセットしますか？'))return;
+  auc.bagPool=[];
+  auc.joinLogs=auc.joinLogs||[];
+  auc.joinLogs.push({date:new Date().toISOString(),message:'🗑 福袋の中身がリセットされました'});
+  if(auc.joinLogs.length>15)auc.joinLogs=auc.joinLogs.slice(-15);
   await syncAuctionAfterChange();
 }
 
@@ -655,11 +676,11 @@ function buildBagLot(auc){
 }
 
 function makeNextLot(auc,filter,label){
-  auc.lotCount=(auc.lotCount||0)+1;
-  const bagSlot=Number(auc.bagSlot)||0;
+  const nextNum=(Number(auc.completedCount)||0)+1;
+  const bagInterval=Number(auc.bagInterval)||0;
   const bag=auc.bagPool||[];
-  if(bagSlot>0&&!auc.bagUsed&&bag.length>0&&auc.lotCount>=bagSlot){
-    auc.bagUsed=true;
+  // 規定回数（10回目、20回目…）かつ福袋に1体以上入っている場合は福袋を出品
+  if(bagInterval>0&&nextNum%bagInterval===0&&bag.length>0){
     return buildBagLot(auc);
   }
   const used=new Set(auc.players.flatMap(p=>(p.picks||[]).map(x=>x.name)));
@@ -670,12 +691,12 @@ function makeNextLot(auc,filter,label){
   return {id:uid(),isBag:false,pokemon:p.name,dex:p.dex,highest:null,bids:[],sourceLabel:label,openedAt:new Date().toISOString(),endsAt:dur>0?Date.now()+dur*1000:null};
 }
 
-// 売却タイム中のみ半額売却が可能
+// 売却フェーズ中のみ半額売却が可能
 async function sellAuctionPick(playerIdx,pickIdx){
   const auc=state.auction;if(!auc)return;
   if(onlineRoom.role!=='local'&&onlineRoom.code)await fetchOnlineAuction();
   const latest=state.auction;
-  if(!isSellTimeActive(latest))return alert('売却タイム中のみ半額売却ができます');
+  if(!isSellPhaseActive(latest))return alert('売却フェーズ中のみ半額売却ができます');
   const p=latest.players[playerIdx];
   if(!p||!p.picks?.[pickIdx])return alert('対象のポケモンが見つかりません');
 
@@ -784,6 +805,7 @@ async function aucDrawRandom(){
   const lot=makeNextLot(auc,filter,label);
   if(!lot)return alert('条件に一致する未落札のポケモンが残っていません');
   auc.started=true;
+  auc.phase='bidding';
   auc.currentAuction=lot;
   await syncAuctionAfterChange();
 }
@@ -795,8 +817,8 @@ async function aucManualLot(){
   const p=state.pokemon.find(x=>x.name===name);
   if(!p)return alert('ポケモンを選択してください');
   const dur=Number(auc.timerDuration)||0;
-  auc.lotCount=(auc.lotCount||0)+1;
   auc.started=true;
+  auc.phase='bidding';
   auc.currentAuction={id:uid(),isBag:false,pokemon:p.name,dex:p.dex,highest:null,bids:[],sourceLabel:'主催者手動出品',openedAt:new Date().toISOString(),endsAt:dur>0?Date.now()+dur*1000:null};
   await syncAuctionAfterChange();
 }
@@ -808,6 +830,7 @@ async function auctionBid(plus1k=false){
     await fetchOnlineAuction();
   }
   const latestAuc=state.auction;
+  if(isSellPhaseActive(latestAuc))return alert('現在は売却フェーズ中のため入札できません');
   const a=latestAuc.currentAuction;
   const i=Number($('#auction-player').value);
   if(!latestAuc.players[i])return alert('プレイヤー情報が見つかりません');
@@ -854,6 +877,7 @@ async function auctionClose(){
   const a=latestAuc.currentAuction;
   latestAuc.auctionHistory=latestAuc.auctionHistory||[];
   latestAuc.bagPool=latestAuc.bagPool||[];
+  latestAuc.completedCount=(Number(latestAuc.completedCount)||0)+1;
 
   if(a.highest){
     const w=a.highest;
@@ -864,10 +888,11 @@ async function auctionClose(){
       for(const item of contents){
         latestAuc.players[w.player].picks.push({name:item.name,dex:item.dex,price:Math.floor(w.amount/Math.max(1,contents.length))});
       }
+      // 福袋が落札されたら中身を完全にリセット
       latestAuc.bagPool=[];
       latestAuc.auctionHistory.push({pokemon:`🎁 福袋（${contents.map(x=>x.name).join('、')}）`,dex:'BAG',winner:w.player,winnerName:wName,amount:w.amount,date:new Date().toISOString()});
       latestAuc.joinLogs=latestAuc.joinLogs||[];
-      latestAuc.joinLogs.push({date:new Date().toISOString(),message:`🎁 ${wName} が福袋（${contents.length}体）を ${w.amount.toLocaleString()}オルカで落札！`});
+      latestAuc.joinLogs.push({date:new Date().toISOString(),message:`🎁 ${wName} が福袋（${contents.length}体）を ${w.amount.toLocaleString()}オルカで落札！（福袋中身リセット）`});
     }else{
       latestAuc.players[w.player].picks.push({name:a.pokemon,dex:a.dex,price:w.amount});
       latestAuc.auctionHistory.push({pokemon:a.pokemon,dex:a.dex,winner:w.player,winnerName:wName,amount:w.amount,date:new Date().toISOString()});
@@ -880,15 +905,18 @@ async function auctionClose(){
     latestAuc.auctionHistory.push({pokemon:a.pokemon,dex:a.dex,winner:null,winnerName:null,amount:0,date:new Date().toISOString()});
   }
 
-  // 指定した出品数に達したら売却タイムを発生させる
-  const trigLot=Number(latestAuc.sellTriggerLot)||0;
-  if(trigLot>0&&!latestAuc.sellTriggeredDone&&(latestAuc.lotCount||0)>=trigLot){
-    latestAuc.sellTriggeredDone=true;
+  // 5回ごと（設定間隔ごと）に売却フェーズ画面へ自動切替
+  const sellInt=Number(latestAuc.sellInterval)||0;
+  if(sellInt>0&&latestAuc.completedCount%sellInt===0){
+    latestAuc.currentAuction=null;
     const sec=Math.max(5,Number(latestAuc.sellDuration)||45);
+    latestAuc.phase='selling';
     latestAuc.sellTimeEndsAt=Date.now()+sec*1000;
     latestAuc.joinLogs=latestAuc.joinLogs||[];
-    latestAuc.joinLogs.push({date:new Date().toISOString(),message:`💸 ${trigLot}回目の出品完了！売却タイム（${sec}秒）がスタートしました！`});
+    latestAuc.joinLogs.push({date:new Date().toISOString(),message:`💸 ${latestAuc.completedCount}回終了！売却フェーズ（${sec}秒）へ切り替わりました！`});
     if(latestAuc.joinLogs.length>15)latestAuc.joinLogs=latestAuc.joinLogs.slice(-15);
+    await syncAuctionAfterChange();
+    return;
   }
 
   if(latestAuc.autoNext!==false){

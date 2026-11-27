@@ -388,7 +388,6 @@ function auctionBoard(auc){
           <button class="orange" data-act="auction-bid" ${expired?'disabled':''}>入札する</button>
           <button class="green" data-act="auction-bid-plus1k" ${expired?'disabled':''}>+1,000で即入札</button>
           <button class="purple" data-act="auction-allin" ${expired?'disabled':''}>💥 全額ベット</button>
-          <button class="secondary" data-act="auction-cancel" ${expired?'disabled':''}>自分の最新入札を取消</button>
           ${!isGuest?btn('落札確定／スキップ','auction-close','secondary'):''}
         </div>
       </div>`:''}
@@ -512,7 +511,7 @@ async function fetchOnlineAuction(){
       return null;
     }
     onlineRoom.error='';
-    const clean={...data};delete clean.updatedAt;
+    const clean=normalizeAuctionBids({...data});delete clean.updatedAt;
     const str=JSON.stringify(clean);
     if(str!==onlineRoom.lastJson){
       onlineRoom.lastJson=str;
@@ -954,6 +953,58 @@ async function aucManualLot(){
   await syncAuctionAfterChange();
 }
 
+function normalizeAuctionBids(auc){
+  if(!auc||!auc.currentAuction)return auc;
+  const a=auc.currentAuction;
+  let list=[];
+  if(Array.isArray(a.bids)){
+    list=a.bids.filter(Boolean).map((b,idx)=>({...b,_order:String(idx).padStart(8,'0')}));
+  }else if(a.bids&&typeof a.bids==='object'){
+    list=Object.entries(a.bids)
+      .filter(([,v])=>v&&typeof v==='object')
+      .sort(([k1],[k2])=>k1.localeCompare(k2))
+      .map(([k,v])=>({...v,_order:k}));
+  }
+  a.bids=list.map(({_order,...rest})=>rest);
+  let top=null;
+  for(const b of a.bids){
+    const amt=Number(b.amount)||0;
+    if(!top||amt>top.amount){
+      top={player:b.player,amount:amt};
+    }
+  }
+  a.highest=top;
+  return auc;
+}
+
+async function postOnlineSingleBid(lotId,bidObj,nextEndsAt){
+  const base=normalizeFbUrl(state.settings.firebaseUrl);
+  if(!base||!onlineRoom.code)return false;
+  onlineRoom.syncing=true;
+  try{
+    const res=await fetch(`${base}/rooms/${onlineRoom.code}/currentAuction/bids.json`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({...bidObj,lotId})
+    });
+    if(!res.ok)throw Error(`HTTP ${res.status}`);
+    if(nextEndsAt){
+      await fetch(`${base}/rooms/${onlineRoom.code}/currentAuction/endsAt.json`,{
+        method:'PUT',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(nextEndsAt)
+      });
+    }
+    onlineRoom.error='';
+    return true;
+  }catch(e){
+    onlineRoom.error='入札送信失敗: '+e.message;
+    return false;
+  }finally{
+    onlineRoom.syncing=false;
+  }
+}
+
 async function auctionBid(mode='custom'){
   const auc=state.auction;if(!auc||!auc.currentAuction)return alert('出品中のポケモンがありません');
   if(isLotExpired(auc.currentAuction))return alert('制限時間が終了したため入札できません');
@@ -961,7 +1012,7 @@ async function auctionBid(mode='custom'){
   if(onlineRoom.role!=='local'&&onlineRoom.code){
     await fetchOnlineAuction();
   }
-  const latestAuc=state.auction;
+  const latestAuc=normalizeAuctionBids(state.auction);
   if(isSellPhaseActive(latestAuc))return alert('現在は売却フェーズ中のため入札できません');
   const a=latestAuc.currentAuction;
   if(!a||isLotExpired(a))return alert('制限時間が終了したため入札できません');
@@ -989,44 +1040,34 @@ async function auctionBid(mode='custom'){
 
   if(!Number.isInteger(amount)||amount<1000||amount%1000)return alert('入札額は1,000オルカ以上、1,000単位です');
   if(latestAuc.budgetEnabled&&amount>latestAuc.balances[i])return alert('残り予算を超えています');
-  if(a.highest&&amount<a.highest.amount)return alert(`現在の最高入札額（${a.highest.amount.toLocaleString()}オルカ）より低い金額では入札できません`);
+  if(a.highest&&amount<=a.highest.amount)return alert(`現在の最高入札額（${a.highest.amount.toLocaleString()}オルカ）より高い金額で入札してください`);
 
-  a.bids=a.bids||[];
-  a.bids.push({player:i,amount,date:new Date().toISOString()});
-
-  if(!a.highest){
-    a.highest={player:i,amount};
-  }else if(amount>a.highest.amount){
-    a.highest={player:i,amount};
-  }
-
+  const newBid={player:i,amount,date:new Date().toISOString()};
   draftBidInput={lotId:a.id,value:'',dirty:false};
 
+  let nextEndsAt=null;
   const dur=Number(latestAuc.timerDuration)||0;
   if(dur>0&&a.endsAt){
     const minExtend=Date.now()+10000;
-    if(a.endsAt<minExtend)a.endsAt=minExtend;
-  }
-  await syncAuctionAfterChange();
-}
-
-async function auctionCancel(){
-  const auc=state.auction;if(!auc?.currentAuction)return;
-  if(isLotExpired(auc.currentAuction))return alert('制限時間が終了したため操作できません');
-  if(onlineRoom.role!=='local'&&onlineRoom.code)await fetchOnlineAuction();
-  const i=Number($('#auction-player').value),a=state.auction.currentAuction;
-  a.bids=a.bids||[];
-  let idx=-1;
-  for(let j=a.bids.length-1;j>=0;j--)if(a.bids[j].player===i){idx=j;break}
-  if(idx<0)return alert('取り消せる入札がありません');
-  a.bids.splice(idx,1);
-  a.highest=null;
-  for(const b of a.bids){
-    if(!a.highest||b.amount>a.highest.amount){
-      a.highest={player:b.player,amount:b.amount};
+    if(a.endsAt<minExtend){
+      nextEndsAt=minExtend;
+      a.endsAt=minExtend;
     }
   }
-  await syncAuctionAfterChange();
+
+  if(onlineRoom.role!=='local'&&onlineRoom.code){
+    const ok=await postOnlineSingleBid(a.id,newBid,nextEndsAt);
+    if(!ok){
+      alert(onlineRoom.error||'入札の送信に失敗しました');
+      return;
+    }
+    await fetchOnlineAuction();
+  }else{
+    a.bids=a.bids||[];
+    a.bids.push(newBid);
+    normalizeAuctionBids(latestAuc);
+    await saveRender();
+  }
 }
 
 async function auctionClose(){
